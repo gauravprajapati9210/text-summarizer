@@ -1,7 +1,6 @@
 import os
+import re
 from pathlib import Path
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import torch
 
 class SummarizationModel:
     def __init__(self, model_path: str = None):
@@ -19,6 +18,9 @@ class SummarizationModel:
             )
         
         self.model_path = model_path
+        from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+        import torch
+
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
         try:
@@ -67,9 +69,45 @@ class SummarizationModel:
 # Global model instance
 _model_instance = None
 
+
+class LightweightSummarizationModel:
+    """Extractive summarizer for small-memory deployments."""
+
+    def summarize(self, text: str, max_length: int = 150, min_length: int = 30) -> str:
+        sentences = [sentence.strip() for sentence in re.split(r"(?<=[.!?])\s+", text.strip()) if sentence.strip()]
+        if not sentences:
+            raise ValueError("Input text cannot be empty")
+
+        words = re.findall(r"[A-Za-z']+", text.lower())
+        frequencies = {}
+        for word in words:
+            frequencies[word] = frequencies.get(word, 0) + 1
+
+        ranked = sorted(
+            enumerate(sentences),
+            key=lambda item: sum(frequencies.get(word, 0) for word in re.findall(r"[A-Za-z']+", item[1].lower()))
+            / max(len(item[1].split()), 1),
+            reverse=True,
+        )
+        selected = []
+        length = 0
+        for index, sentence in sorted(ranked, key=lambda item: item[0]):
+            sentence_length = len(sentence.split())
+            if selected and length + sentence_length > max_length:
+                continue
+            selected.append(sentence)
+            length += sentence_length
+            if length >= min_length:
+                break
+
+        return " ".join(selected)[: max_length * 7].strip()
+
 def get_model() -> SummarizationModel:
     """Get or create the global model instance."""
     global _model_instance
     if _model_instance is None:
-        _model_instance = SummarizationModel()
+        if os.getenv("LIGHTWEIGHT_MODE", "").lower() in {"1", "true", "yes"}:
+            _model_instance = LightweightSummarizationModel()
+        else:
+            _model_instance = SummarizationModel()
     return _model_instance
