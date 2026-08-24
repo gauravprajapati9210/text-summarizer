@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+backend/.env
+.env.local
+.env.*.local
+!backend/.env.example
+
+# Dependencies
+node_modules/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Cache
+*.cache
+.pytest_cache/
+.coverage
+
+# Logs
+*.log
+
+# Local visitor-counter database
+backend/visitors.db
+backend/visitors.db-shm
+backend/visitors.db-wal
+
+# IDE settings
+*.sublime-project
+*.sublime-workspace
+
+# Model checkpoints (keep saved_summary_model)
+results/
+checkpoint-*

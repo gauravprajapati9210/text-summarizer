@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextSummarizer - Summarize Text in Seconds</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #eff6ff;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #ffffff;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .site-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: -0.5px;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--primary-color);
+        }
+
+        .about-btn {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .about-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Main Container */
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Input Section */
+        .input-section label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.75rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 250px;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        textarea::placeholder {
+            color: #d1d5db;
+        }
+
+        /* Counters */
+        .counters {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .counter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .counter-label {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .counter-value {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        /* Button Styles */
+        button {
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .primary-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.875rem 1.75rem;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .primary-btn:hover:not(:disabled) {
+            background-color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .primary-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .secondary-btn {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--border-color);
+            margin-top: 1rem;
+        }
+
+        .secondary-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            transition: transform 0.2s;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Button Group */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .button-group button {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* Output Section */
+        .output-section {
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .output-section.visible {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .output-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .summary-text {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            line-height: 1.8;
+            color: var(--text-dark);
+        }
+
+        .summary-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: var(--primary-light);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+
+        .summary-stats {
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+
+        .copy-feedback {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Error Message */
+        .error-message {
+            display: none;
+            background-color: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Drag and Drop */
+        .drag-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(59, 130, 246, 0.1);
+            border: 2px dashed var(--primary-color);
+            border-radius: var(--radius);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .drag-overlay.active {
+            display: flex;
+        }
+
+        .drag-text {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .textarea-wrapper {
+            position: relative;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: var(--radius);
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .modal-close:hover {
+            color: var(--text-dark);
+        }
+
+        .visit-counter {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 0 2rem 2rem;
+        }
+
+        .modal-header {
+            margin-bottom: 1rem;
+            clear: both;
+        }
+
+        .modal-header h2 {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+            }
+
+            .header-container {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            nav {
+                gap: 1rem;
+            }
+
+            main {
+                padding: 1.5rem 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            textarea {
+                min-height: 200px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .counters {
+                gap: 1rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group button {
+                width: 100%;
+            }
+
+            .summary-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .copy-feedback {
+                bottom: auto;
+                top: 50%;
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+                padding: 1rem;
+            }
+
+            .modal-content {
+                width: 90%;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .hero p {
+                font-size: 0.95rem;
+            }
+
+            .site-name {
+                font-size: 1.25rem;
+            }
+
+            nav {
+                width: 100%;
+                gap: 0.5rem;
+            }
+
+            .about-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .primary-btn,
+            .secondary-btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <div class="logo">T</div>
+                <div class="site-name">TextSummarizer</div>
+            </div>
+            <nav>
+                <a href="#home">Home</a>
+                <button class="about-btn" id="aboutBtn">About</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="home">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-icon">📄</div>
+            <h1>Summarize Text in Seconds</h1>
+            <p>Turn long text into clear, concise summaries with one click.</p>
+        </section>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Input Section -->
+        <section class="card input-section">
+            <label for="textInput">Enter or Paste Your Text</label>
+            <div class="textarea-wrapper">
+                <textarea
+                    id="textInput"
+                    placeholder="Paste your text here..."></textarea>
+                <div class="drag-overlay" id="dragOverlay">
+                    <div class="drag-text">📥 Drop text file here</div>
+                </div>
+            </div>
+
+            <div class="counters">
+                <div class="counter">
+                    <span class="counter-label">Characters:</span>
+                    <span class="counter-value" id="charCount">0</span>
+                </div>
+                <div class="counter">
+                    <span class="counter-label">Words:</span>
+                    <span class="counter-value" id="wordCount">0</span>
+                </div>
+            </div>
+
+            <button class="primary-btn" id="summarizeBtn">Summarize Text</button>
+            <button class="secondary-btn" id="clearInputBtn">Clear</button>
+        </section>
+
+        <!-- Output Section -->
+        <section class="card output-section" id="outputSection">
+            <div class="output-header">
+                <h2>Summary</h2>
+                <div class="output-actions">
+                    <button class="icon-btn" id="copyBtn" title="Copy summary">📋</button>
+                    <button class="icon-btn" id="downloadBtn" title="Download summary">⬇️</button>
+                </div>
+            </div>
+
+            <div class="summary-text" id="summaryText"></div>
+
+            <div class="summary-info">
+                <span class="summary-stats">
+                    <strong>Summary Length:</strong> <span id="summaryLength">0</span> words
+                </span>
+            </div>
+
+            <div class="button-group">
+                <button class="secondary-btn" id="newSummaryBtn">Summarize New Text</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="visit-counter">
+        Visits: <strong id="visitCount" aria-live="polite">—</strong>
+    </footer>
+
+    <!-- About Modal -->
+    <div class="modal" id="aboutModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">&times;</button>
+            <div class="modal-header">
+                <h2>About TextSummarizer</h2>
+                <p style="color: var(--text-light);">Powered by advanced AI</p>
+            </div>
+            <p>
+                <strong>TextSummarizer</strong> is a modern web application designed to help you save time by
+                automatically summarizing long texts into clear, concise summaries.
+            </p>
+            <p style="margin-top: 1rem;">
+                Built with a state-of-the-art transformer-based language model, TextSummarizer understands the
+                context and key points in your text to generate meaningful summaries.
+            </p>
+            <p style="margin-top: 1rem; color: var(--text-light); font-size: 0.95rem;">
+                <strong>Features:</strong>
+            </p>
+            <ul style="margin-top: 0.5rem; margin-left: 1.5rem; color: var(--text-light);">
+                <li>Instant text summarization</li>
+                <li>Character and word counting</li>
+                <li>Copy and download summaries</li>
+                <li>Fully responsive design</li>
+                <li>No sign-up required</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Copy Feedback -->
+    <div class="copy-feedback" id="copyFeedback" style="display: none;">✓ Copied to clipboard!</div>
+
+    <script src="./config.js"></script>
+    <script>
+        // Configuration
+        const configuredApiUrl = window.TEXT_SUMMARIZER_CONFIG?.apiBaseUrl?.replace(/\/$/, '');
+        const API_BASE_URL = localStorage.getItem('apiBaseUrl') || configuredApiUrl || 'http://localhost:8000';
+
+        // DOM Elements
+        const textInput = document.getElementById('textInput');
+        const charCount = document.getElementById('charCount');
+        const wordCount = document.getElementById('wordCount');
+        const clearInputBtn = document.getElementById('clearInputBtn');
+        const summarizeBtn = document.getElementById('summarizeBtn');
+        const outputSection = document.getElementById('outputSection');
+        const summaryText = document.getElementById('summaryText');
+        const summaryLength = document.getElementById('summaryLength');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const newSummaryBtn = document.getElementById('newSummaryBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const aboutBtn = document.getElementById('aboutBtn');
+        const aboutModal = document.getElementById('aboutModal');
+        const closeModal = document.getElementById('closeModal');
+        const dragOverlay = document.getElementById('dragOverlay');
+        const copyFeedback = document.getElementById('copyFeedback');
+        const textareaWrapper = document.querySelector('.textarea-wrapper');
+        const visitCount = document.getElementById('visitCount');
+
+        // State
+        let currentSummary = '';
+
+        // Event Listeners
+        textInput.addEventListener('input', updateCounters);
+        clearInputBtn.addEventListener('click', clearInput);
+        summarizeBtn.addEventListener('click', summarizeText);
+        copyBtn.addEventListener('click', copySummary);
+        downloadBtn.addEventListener('click', downloadSummary);
+        newSummaryBtn.addEventListener('click', startNewSummary);
+        aboutBtn.addEventListener('click', openAbout);
+        closeModal.addEventListener('click', closeAbout);
+        aboutModal.addEventListener('click', (e) => {
+            if (e.target === aboutModal) closeAbout();
+        });
+
+        // Drag and Drop
+        textareaWrapper.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dragOverlay.classList.add('active');
+        });
+
+        textareaWrapper.addEventListener('dragleave', () => {
+            dragOverlay.classList.remove('active');
+        });
+
+        textareaWrapper.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragOverlay.classList.remove('active');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'text/plain') {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        textInput.value = event.target.result;
+                        updateCounters();
+                    };
+                    reader.readAsText(file);
+                } else {
+                    showError('Please drop a text file (.txt)');
+                }
+            }
+        });
+
+        // Functions
+        function updateCounters() {
+            const text = textInput.value;
+            charCount.textContent = text.length;
+            wordCount.textContent = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+        }
+
+        function clearInput() {
+            textInput.value = '';
+            updateCounters();
+            hideError();
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('visible');
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('visible');
+        }
+
+        async function summarizeText() {
+            const text = textInput.value.trim();
+
+            // Validation
+            if (!text) {
+                showError('Please enter some text before summarizing.');
+                return;
+            }
+
+            const wordCnt = text.split(/\s+/).filter(w => w.length > 0).length;
+            if (wordCnt < 10) {
+                showError('Text is too short. Please provide at least 10 words.');
+                return;
+            }
+
+            if (wordCnt > 2000) {
+                showError('Text is too long. Maximum 2000 words allowed.');
+                return;
+            }
+
+            // Show loading state
+            hideError();
+            summarizeBtn.disabled = true;
+            summarizeBtn.innerHTML = '<span class="loader"></span>Summarizing...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/summarize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.detail || 'Failed to generate summary');
+                }
+
+                const data = await response.json();
+                currentSummary = data.summary;
+
+                // Display summary
+                summaryText.textContent = currentSummary;
+                summaryLength.textContent = data.summary_length;
+                outputSection.classList.add('visible');
+
+                // Scroll to summary
+                outputSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            } catch (error) {
+                console.error('Error:', error);
+                if (error.message.includes('Failed to fetch')) {
+                    showError(`Unable to connect to the API. Make sure the backend is running at ${API_BASE_URL}`);
+                } else {
+                    showError(error.message || 'An unexpected error occurred. Please try again.');
+                }
+            } finally {
+                summarizeBtn.disabled = false;
+                summarizeBtn.textContent = 'Summarize Text';
+            }
+        }
+
+        function copySummary() {
+            navigator.clipboard.writeText(currentSummary).then(() => {
+                copyFeedback.style.display = 'block';
+                setTimeout(() => {
+                    copyFeedback.style.display = 'none';
+                }, 2000);
+            }).catch(() => {
+                showError('Failed to copy to clipboard');
+            });
+        }
+
+        function downloadSummary() {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(currentSummary));
+            element.setAttribute('download', 'summary.txt');
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function startNewSummary() {
+            clearInput();
+            outputSection.classList.remove('visible');
+            textInput.focus();
+        }
+
+        function openAbout() {
+            aboutModal.classList.add('active');
+        }
+
+        function closeAbout() {
+            aboutModal.classList.remove('active');
+        }
+
+        async function registerVisit() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/visits`);
+                if (!response.ok) return;
+
+                const data = await response.json();
+                visitCount.textContent = data.count.toLocaleString();
+            } catch (error) {
+                console.warn('Unable to load visit count:', error);
+            }
+        }
+
+        // Initialize
+        updateCounters();
+        registerVisit();
+
+        // Allow configuration via localStorage
+        console.log('TextSummarizer loaded');
+        console.log('API Base URL:', API_BASE_URL);
+    </script>
+</body>
+</html>
