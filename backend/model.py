@@ -12,10 +12,10 @@ class SummarizationModel:
             model_path: Path to the saved model. If None, uses the default location.
         """
         if model_path is None:
-            # Use the existing saved model in the parent directory
-            model_path = os.path.join(
-                Path(__file__).parent.parent,
-                "saved_summary_model"
+            deployed_model_path = Path(__file__).parent / "saved_summary_model"
+            local_model_path = Path(__file__).parent.parent / "saved_summary_model"
+            model_path = str(
+                deployed_model_path if deployed_model_path.exists() else local_model_path
             )
         
         self.model_path = model_path
