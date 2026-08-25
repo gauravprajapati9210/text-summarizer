@@ -155,6 +155,20 @@ class HuggingFaceSummarizationModel:
         return summary
 
 
+class ResilientSummarizationModel:
+    """Prefer Hugging Face while keeping the web API available during outages."""
+
+    def __init__(self, primary, fallback):
+        self.primary = primary
+        self.fallback = fallback
+
+    def summarize(self, text: str, max_length: int = 150, min_length: int = 30) -> str:
+        try:
+            return self.primary.summarize(text, max_length, min_length)
+        except RuntimeError:
+            return self.fallback.summarize(text, max_length, min_length)
+
+
 def get_model() -> SummarizationModel:
     """Get or create the global model instance."""
     global _model_instance
@@ -162,7 +176,10 @@ def get_model() -> SummarizationModel:
         hf_token = os.getenv("HF_API_TOKEN", "").strip()
         hf_model_id = os.getenv("HF_MODEL_ID", "facebook/bart-large-cnn").strip()
         if hf_token:
-            _model_instance = HuggingFaceSummarizationModel(hf_model_id, hf_token)
+            _model_instance = ResilientSummarizationModel(
+                HuggingFaceSummarizationModel(hf_model_id, hf_token),
+                LightweightSummarizationModel(),
+            )
         elif os.getenv("LIGHTWEIGHT_MODE", "").lower() in {"1", "true", "yes"}:
             _model_instance = LightweightSummarizationModel()
         else:
