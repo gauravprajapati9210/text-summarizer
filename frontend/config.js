@@ -1,4 +1,4 @@
 // Generated during the Netlify build.
 window.TEXT_SUMMARIZER_CONFIG = {
-    apiBaseUrl: "http://localhost:8000",
+    apiBaseUrl: "https://text-summarizer-api-2ax4.onrender.com",
 };

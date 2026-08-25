@@ -6,10 +6,17 @@ import os
 from pathlib import Path
 import sqlite3
 import json
+import logging
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from dotenv import load_dotenv
-from model import get_model
+
+logger = logging.getLogger(__name__)
+
+try:
+    from .model import get_model
+except ImportError:
+    from model import get_model
 
 # Load environment variables
 load_dotenv()
@@ -40,6 +47,7 @@ allowed_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://[a-z0-9-]+\.netlify\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -123,6 +131,30 @@ def increment_supabase_visit_count() -> int:
     return count
 
 
+def save_summary_to_supabase(text: str, summary: str) -> None:
+    """Store generated summaries when Supabase is configured."""
+    if not (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY):
+        return
+
+    payload = json.dumps({"source_text": text, "summary": summary}).encode("utf-8")
+    request = Request(
+        f"{SUPABASE_URL}/rest/v1/summaries",
+        data=payload,
+        headers={
+            "apikey": SUPABASE_SERVICE_ROLE_KEY,
+            "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=10):
+            pass
+    except (HTTPError, URLError) as error:
+        raise RuntimeError("Unable to save the summary to Supabase.") from error
+
+
 def increment_visit_count() -> int:
     """Use Supabase in deployment and SQLite only for local development."""
     if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
@@ -188,6 +220,10 @@ def summarize(request: SummarizeRequest):
         
         # Calculate summary word count
         summary_word_count = len(summary.split())
+        try:
+            save_summary_to_supabase(text, summary)
+        except RuntimeError:
+            logger.exception("Summary generated, but Supabase persistence failed.")
         
         return SummarizeResponse(
             summary=summary,

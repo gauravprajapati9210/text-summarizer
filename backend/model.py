@@ -1,6 +1,11 @@
 import os
 import re
+import json
+import time
 from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+import torch
 
 class SummarizationModel:
     def __init__(self, model_path: str = None):
@@ -19,8 +24,6 @@ class SummarizationModel:
         
         self.model_path = model_path
         from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-        import torch
-
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
         try:
@@ -102,11 +105,65 @@ class LightweightSummarizationModel:
 
         return " ".join(selected)[: max_length * 7].strip()
 
+class HuggingFaceSummarizationModel:
+    """Summarizer backed by the Hugging Face Inference API."""
+
+    def __init__(self, model_id: str, token: str):
+        self.endpoint = f"https://router.huggingface.co/hf-inference/models/{model_id}"
+        self.token = token
+
+    def summarize(self, text: str, max_length: int = 150, min_length: int = 30) -> str:
+        payload = json.dumps({
+            "inputs": text,
+            "parameters": {
+                "max_length": max_length,
+                "min_length": min_length,
+            },
+        }).encode("utf-8")
+        request = Request(
+            self.endpoint,
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        for attempt in range(3):
+            try:
+                with urlopen(request, timeout=90) as response:
+                    result = json.loads(response.read().decode("utf-8"))
+                break
+            except HTTPError as error:
+                if error.code == 503 and attempt < 2:
+                    retry_after = error.headers.get("Retry-After")
+                    try:
+                        wait_seconds = min(float(retry_after), 30) if retry_after else 10
+                    except ValueError:
+                        wait_seconds = 10
+                    time.sleep(wait_seconds)
+                    continue
+                raise RuntimeError("Hugging Face summarization request failed.") from error
+            except (URLError, ValueError) as error:
+                raise RuntimeError("Hugging Face summarization request failed.") from error
+
+        if not isinstance(result, list) or not result or not isinstance(result[0], dict):
+            raise RuntimeError("Hugging Face returned an invalid summarization response.")
+        summary = result[0].get("summary_text", "").strip()
+        if not summary:
+            raise RuntimeError("Hugging Face returned an empty summary.")
+        return summary
+
+
 def get_model() -> SummarizationModel:
     """Get or create the global model instance."""
     global _model_instance
     if _model_instance is None:
-        if os.getenv("LIGHTWEIGHT_MODE", "").lower() in {"1", "true", "yes"}:
+        hf_token = os.getenv("HF_API_TOKEN", "").strip()
+        hf_model_id = os.getenv("HF_MODEL_ID", "facebook/bart-large-cnn").strip()
+        if hf_token:
+            _model_instance = HuggingFaceSummarizationModel(hf_model_id, hf_token)
+        elif os.getenv("LIGHTWEIGHT_MODE", "").lower() in {"1", "true", "yes"}:
             _model_instance = LightweightSummarizationModel()
         else:
             _model_instance = SummarizationModel()

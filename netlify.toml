@@ -2,6 +2,9 @@
   command = "node scripts/build-frontend-config.mjs"
   publish = "frontend"
 
+[build.environment]
+  API_BASE_URL = "https://text-summarizer-api-2ax4.onrender.com"
+
 [[headers]]
   for = "/*"
   [headers.values]
