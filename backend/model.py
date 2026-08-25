@@ -175,7 +175,10 @@ def get_model() -> SummarizationModel:
     if _model_instance is None:
         hf_token = os.getenv("HF_API_TOKEN", "").strip()
         hf_model_id = os.getenv("HF_MODEL_ID", "facebook/bart-large-cnn").strip()
-        if hf_token:
+        lightweight_mode = os.getenv("LIGHTWEIGHT_MODE", "").lower() in {"1", "true", "yes"}
+        if lightweight_mode:
+            _model_instance = LightweightSummarizationModel()
+        elif hf_token:
             _model_instance = ResilientSummarizationModel(
                 HuggingFaceSummarizationModel(hf_model_id, hf_token),
                 LightweightSummarizationModel(),
